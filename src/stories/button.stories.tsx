@@ -19,14 +19,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    variant: 'primary',
+    variant: 'default',
     children: 'Primary Button'
   }
 };
 
 export const DefaultWithLeftIcon: Story = {
   args: {
-    variant: 'primary',
+    variant: 'default',
     children: (
       <>
         <Pencil />
@@ -38,7 +38,7 @@ export const DefaultWithLeftIcon: Story = {
 
 export const DefaultWithRightIcon: Story = {
   args: {
-    variant: 'primary',
+    variant: 'default',
     children: (
       <>
         Primary Button
