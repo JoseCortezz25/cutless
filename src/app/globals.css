@@ -137,3 +137,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+.btn-primary {
+  @apply py-2 px-4 rounded-md;
+}
+
+.btn-secondary {
+  @apply py-2 px-4 rounded-md border border-gray-800 text-gray-800 hover:bg-gray-700 hover:text-white;
+}
+
+.cl-primary-button {
+  @apply bg-blue-700 rounded-full !px-[15px] text-white cursor-pointer active:scale-95 transition-all duration-300;
+}
