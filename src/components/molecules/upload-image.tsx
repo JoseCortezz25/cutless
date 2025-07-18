@@ -1,8 +1,8 @@
-import { Steps } from "@/lib/types";
-import { Button } from "../ui/button";
-import { useRef, useState } from "react";
-import { cn } from "@/lib/utils";
-import { useEmail } from "@/stores/use-email";
+import { Steps } from '@/lib/types';
+import { Button } from '../ui/button';
+import { useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useEmail } from '@/stores/use-email';
 
 interface UploadImageProps {
   onNext: (step: Steps) => void;
@@ -50,11 +50,18 @@ export const UploadImage = ({ onNext }: UploadImageProps) => {
 
   return (
     <div className="w-full space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight text-left">Upload Image</h1>
+      <div className="my-6 space-y-2">
+        <h1 className="text-left text-3xl font-bold tracking-tight">
+          Upload Image
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Upload an image to get started.
+        </p>
+      </div>
       <div
         className={cn(
-          "flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-card text-card-foreground shadow-sm",
-          isDragging ? "border-primary bg-accent" : "border-input"
+          'bg-card text-card-foreground flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed shadow-sm',
+          isDragging ? 'border-primary bg-accent' : 'border-input'
         )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -62,18 +69,22 @@ export const UploadImage = ({ onNext }: UploadImageProps) => {
         onClick={() => fileInputRef.current?.click()}
       >
         <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
-          <p className="mb-2 text-lg font-bold text-foreground">
-            {file ? file.name : "Drag and drop an image here, or"}
+          <p className="text-foreground mb-2 text-lg font-bold">
+            {file ? file.name : 'Drag and drop an image here, or'}
           </p>
-          <p className="mb-4 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mb-4 text-sm">
             We recommend using a high-quality image for the best results.
             <br />
             Supported formats: JPG, PNG. Maximum file size: 5MB.
           </p>
-          <Button type="button" variant="ghost" onClick={(e) => {
-            e.stopPropagation();
-            fileInputRef.current?.click();
-          }}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={e => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+          >
             Browse Files
           </Button>
         </div>
@@ -87,7 +98,11 @@ export const UploadImage = ({ onNext }: UploadImageProps) => {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSubmit} disabled={!file} className="bg-blue-700 hover:bg-blue-800 rounded-full">
+        <Button
+          onClick={handleSubmit}
+          disabled={!file}
+          className="rounded-full bg-blue-700 hover:bg-blue-800"
+        >
           Generate Email
         </Button>
       </div>

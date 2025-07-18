@@ -1,33 +1,45 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { useCropWithLines } from "@/hooks/useCrop";
-import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
-import { Scissors, Download, Sparkles, Undo, ZoomIn, ZoomOut } from "lucide-react";
-import JSZip from "jszip";
-import FileSaver from "file-saver";
+import { useState, useRef, useEffect } from 'react';
+import { useCropWithLines } from '@/hooks/useCrop';
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import {
+  Scissors,
+  Download,
+  Sparkles,
+  Undo,
+  ZoomIn,
+  ZoomOut
+} from 'lucide-react';
+import JSZip from 'jszip';
+import FileSaver from 'file-saver';
 
 interface CutPositions {
-  horizontal: number[]
-  vertical: number[]
-  rationale: string
+  horizontal: number[];
+  vertical: number[];
+  rationale: string;
 }
 
 export default function AIImageCutter({
   initialImageUrl,
   initialImageName
-}: { initialImageUrl: string; initialImageName: string }) {
+}: {
+  initialImageUrl: string;
+  initialImageName: string;
+}) {
   const [imageUrl, setImageUrl] = useState<string | null>(initialImageUrl);
-  const [instruction, setInstruction] = useState("");
+  const [instruction, setInstruction] = useState('');
   const [cutPositions, setCutPositions] = useState<CutPositions>({
     horizontal: [],
     vertical: [],
-    rationale: ""
+    rationale: ''
   });
   const [fragments, setFragments] = useState<string[]>([]);
-  const [selectedFragments, setSelectedFragments] = useState<Set<number>>(new Set());
+  const [selectedFragments, setSelectedFragments] = useState<Set<number>>(
+    new Set()
+  );
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -43,7 +55,7 @@ export default function AIImageCutter({
     if (!imageUrl) return;
 
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    img.crossOrigin = 'anonymous';
 
     img.onload = () => {
       imageRef.current = img;
@@ -57,7 +69,7 @@ export default function AIImageCutter({
   // Dibujar la imagen y las líneas en el canvas
   const drawImageAndLines = () => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
+    const ctx = canvas?.getContext('2d');
     const img = imageRef.current;
 
     if (!canvas || !ctx || !img) return;
@@ -79,8 +91,8 @@ export default function AIImageCutter({
     ctx.lineWidth = 2;
 
     // Líneas horizontales
-    ctx.strokeStyle = "#ff3e00";
-    cutPositions.horizontal.forEach((pos) => {
+    ctx.strokeStyle = '#ff3e00';
+    cutPositions.horizontal.forEach(pos => {
       const y = pos * height;
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -89,8 +101,8 @@ export default function AIImageCutter({
     });
 
     // Líneas verticales
-    ctx.strokeStyle = "#3b82f6";
-    cutPositions.vertical.forEach((pos) => {
+    ctx.strokeStyle = '#3b82f6';
+    cutPositions.vertical.forEach(pos => {
       const x = pos * width;
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -112,8 +124,8 @@ export default function AIImageCutter({
 
     try {
       const { text } = await generateText({
-        model: openai("gpt-4o"),
-        prompt: `Analiza esta imagen y sigue esta instrucción: "${instruction || "Identifica las secciones lógicas para dividir esta imagen"}".
+        model: openai('gpt-4o'),
+        prompt: `Analiza esta imagen y sigue esta instrucción: "${instruction || 'Identifica las secciones lógicas para dividir esta imagen'}".
                  
                  IMPORTANTE: Devuelve tu respuesta en este formato JSON exacto:
                  {
@@ -131,12 +143,16 @@ export default function AIImageCutter({
         const positions = JSON.parse(text) as CutPositions;
         setCutPositions(positions);
       } catch (e) {
-        console.error("Error parsing LLM response", e);
-        alert("Error al analizar la respuesta de la IA. Intenta con instrucciones más claras.");
+        console.error('Error parsing LLM response', e);
+        alert(
+          'Error al analizar la respuesta de la IA. Intenta con instrucciones más claras.'
+        );
       }
     } catch (e) {
-      console.error("Error calling AI", e);
-      alert("Error al comunicarse con la IA. Verifica tu conexión e intenta nuevamente.");
+      console.error('Error calling AI', e);
+      alert(
+        'Error al comunicarse con la IA. Verifica tu conexión e intenta nuevamente.'
+      );
     } finally {
       setIsAnalyzing(false);
     }
@@ -154,7 +170,7 @@ export default function AIImageCutter({
         cutPositions.vertical,
         imageRef.current.width,
         imageRef.current.height,
-        { format: "png", quality: 1.0 }
+        { format: 'png', quality: 1.0 }
       );
 
       setFragments(results);
@@ -163,8 +179,10 @@ export default function AIImageCutter({
       const allIndices = new Set(results.map((_, index) => index));
       setSelectedFragments(allIndices);
     } catch (e) {
-      console.error("Error generating fragments", e);
-      alert("Error al generar fragmentos. Intenta con diferentes líneas de corte.");
+      console.error('Error generating fragments', e);
+      alert(
+        'Error al generar fragmentos. Intenta con diferentes líneas de corte.'
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -176,27 +194,32 @@ export default function AIImageCutter({
 
     try {
       const zip = new JSZip();
-      const folder = zip.folder("image-fragments");
+      const folder = zip.folder('image-fragments');
 
       let exportCount = 0;
 
       fragments.forEach((dataUrl, index) => {
         if (selectedFragments.has(index)) {
-          const base64Data = dataUrl.split(",")[1];
-          folder?.file(`fragment-${exportCount + 1}.png`, base64Data, { base64: true });
+          const base64Data = dataUrl.split(',')[1];
+          folder?.file(`fragment-${exportCount + 1}.png`, base64Data, {
+            base64: true
+          });
           exportCount++;
         }
       });
 
       const content = await zip.generateAsync({
-        type: "blob",
-        compression: "STORE"
+        type: 'blob',
+        compression: 'STORE'
       });
 
-      FileSaver.saveAs(content, `${initialImageName.split(".")[0]}-ai-fragments.zip`);
+      FileSaver.saveAs(
+        content,
+        `${initialImageName.split('.')[0]}-ai-fragments.zip`
+      );
     } catch (error) {
-      console.error("Error generating zip:", error);
-      alert("Error al generar el archivo ZIP.");
+      console.error('Error generating zip:', error);
+      alert('Error al generar el archivo ZIP.');
     }
   };
 
@@ -214,54 +237,71 @@ export default function AIImageCutter({
   return (
     <div className="grid gap-6">
       <div className="mb-6">
-        <div className="flex flex-col gap-4 mb-6">
-
+        <div className="mb-6 flex flex-col gap-4">
           {cutPositions.rationale && (
-            <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
-              <h3 className="font-medium mb-2">Análisis de la IA:</h3>
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+              <h3 className="mb-2 font-medium">Análisis de la IA:</h3>
               <p className="text-sm text-gray-700">{cutPositions.rationale}</p>
             </div>
           )}
         </div>
 
-        <div className="bg-gray-100 rounded-lg shadow-lg p-4 flex justify-center items-center">
-          <div className="relative overflow-auto bg-white max-h-[70vh]">
+        <div className="flex items-center justify-center rounded-lg bg-gray-100 p-4 shadow-lg">
+          <div className="relative max-h-[70vh] overflow-auto bg-white">
             <canvas ref={canvasRef} className="max-w-full" />
           </div>
         </div>
 
-        <div className="flex justify-between mt-4">
+        <div className="mt-4 flex justify-between">
           <div className="flex gap-2">
-            <button onClick={() => setZoom(Math.min(zoom + 0.25, 3))} className="btn-outline py-1 px-3 text-sm">
+            <button
+              onClick={() => setZoom(Math.min(zoom + 0.25, 3))}
+              className="btn-outline px-3 py-1 text-sm"
+            >
               <ZoomIn size={16} />
             </button>
-            <button onClick={() => setZoom(Math.max(zoom - 0.25, 0.5))} className="btn-outline py-1 px-3 text-sm">
+            <button
+              onClick={() => setZoom(Math.max(zoom - 0.25, 0.5))}
+              className="btn-outline px-3 py-1 text-sm"
+            >
               <ZoomOut size={16} />
             </button>
-            <button onClick={() => setZoom(1)} className="btn-outline py-1 px-3 text-sm">
+            <button
+              onClick={() => setZoom(1)}
+              className="btn-outline px-3 py-1 text-sm"
+            >
               <Undo size={16} />
             </button>
-            <div className="flex items-center text-sm text-gray-500 ml-2">Zoom: {Math.round(zoom * 100)}%</div>
+            <div className="ml-2 flex items-center text-sm text-gray-500">
+              Zoom: {Math.round(zoom * 100)}%
+            </div>
           </div>
 
           <button
             onClick={generateFragments}
-            disabled={isGenerating || (cutPositions.horizontal.length === 0 && cutPositions.vertical.length === 0)}
-            className="btn-secondary flex items-center gap-2 rounded-full py-2 px-4"
+            disabled={
+              isGenerating ||
+              (cutPositions.horizontal.length === 0 &&
+                cutPositions.vertical.length === 0)
+            }
+            className="btn-secondary flex items-center gap-2 rounded-full px-4 py-2"
           >
             <Scissors size={16} />
-            {isGenerating ? "Generando..." : "Generar Fragmentos"}
+            {isGenerating ? 'Generando...' : 'Generar Fragmentos'}
           </button>
         </div>
       </div>
 
       {fragments.length > 0 && (
         <div className="mt-8">
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold">Fragmentos Generados por IA</h2>
+              <h2 className="text-xl font-semibold">
+                Fragmentos Generados por IA
+              </h2>
               <p className="text-sm text-gray-600">
-                {selectedFragments.size} de {fragments.length} fragmentos seleccionados
+                {selectedFragments.size} de {fragments.length} fragmentos
+                seleccionados
               </p>
             </div>
             <button
@@ -274,31 +314,36 @@ export default function AIImageCutter({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {fragments.map((fragment, index) => (
               <div
                 key={index}
-                className={`border rounded-md overflow-hidden cursor-pointer transition-colors ${selectedFragments.has(index) ? "border-blue-500 ring-2 ring-blue-200" : "hover:border-gray-400"
-                  }`}
+                className={`cursor-pointer overflow-hidden rounded-md border transition-colors ${
+                  selectedFragments.has(index)
+                    ? 'border-blue-500 ring-2 ring-blue-200'
+                    : 'hover:border-gray-400'
+                }`}
                 onClick={() => toggleFragmentSelection(index)}
               >
-                <div className="aspect-square relative">
+                <div className="relative aspect-square">
                   <img
-                    src={fragment || "/placeholder.svg"}
+                    src={fragment || '/placeholder.svg'}
                     alt={`Fragmento ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
-                  <div className="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                  <div className="absolute top-2 right-2 rounded-full bg-white p-1 shadow">
                     <input
                       type="checkbox"
                       checked={selectedFragments.has(index)}
-                      onChange={() => { }}
-                      className="w-4 h-4 pointer-events-none"
+                      onChange={() => {}}
+                      className="pointer-events-none h-4 w-4"
                     />
                   </div>
                 </div>
-                <div className="p-2 bg-white">
-                  <p className="text-sm font-medium truncate">Fragmento {index + 1}</p>
+                <div className="bg-white p-2">
+                  <p className="truncate text-sm font-medium">
+                    Fragmento {index + 1}
+                  </p>
                 </div>
               </div>
             ))}

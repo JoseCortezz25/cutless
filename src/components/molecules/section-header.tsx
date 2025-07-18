@@ -10,8 +10,8 @@ export const SectionHeader = ({
   step
 }: SectionHeaderProps) => {
   return (
-    <header className="flex items-center mb-10 mx-auto bg-blue-200/30 rounded-xl p-4 gap-3">
-      <div className="size-[36px] rounded-full bg-blue-500 text-white font-bold flex items-center justify-center">
+    <header className="mx-auto mb-10 flex items-center gap-3 rounded-xl bg-blue-200/30 p-4">
+      <div className="flex size-[36px] items-center justify-center rounded-full bg-blue-500 font-bold text-white">
         {step}
       </div>
       <div>

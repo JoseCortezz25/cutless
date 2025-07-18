@@ -1,8 +1,9 @@
+'use client';
 
-import { Button } from "../ui/button";
-import { CopyIcon } from "lucide-react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { coldarkDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { Button } from '../ui/button';
+import { CheckIcon, CopyIcon } from 'lucide-react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { coldarkDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,8 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose
-} from "../ui/dialog";
+} from '../ui/dialog';
+import { useEffect, useState } from 'react';
 
 interface CodePreviewModalProps {
   code: string;
@@ -24,8 +26,17 @@ export const CodePreviewModal = ({
   open,
   onOpenChange
 }: CodePreviewModalProps) => {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (copied) {
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [copied]);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
+    setCopied(true);
   };
 
   return (
@@ -49,12 +60,16 @@ export const CodePreviewModal = ({
               Close
             </Button>
           </DialogClose>
-          <Button onClick={handleCopy}>
-            <CopyIcon className="w-4 h-4 mr-2" />
-            Copy Code
+          <Button onClick={handleCopy} disabled={copied} variant="outline">
+            {copied ? (
+              <CheckIcon className="mr-2 h-4 w-4 text-green-500" />
+            ) : (
+              <CopyIcon className="mr-2 h-4 w-4" />
+            )}
+            {copied ? 'Copied' : 'Copy Code'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}; 
+};

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 export interface Fragment {
   id: string;
@@ -17,13 +17,13 @@ interface EmailStore {
   setGeneratedHtml: (generatedHtml: string) => void;
 }
 
-export const useEmail = create<EmailStore>((set) => ({
-  email: "",
+export const useEmail = create<EmailStore>(set => ({
+  email: '',
   image: null,
   fragments: [],
   generatedHtml: null,
-  setEmail: (email) => set({ email }),
-  setImage: (image) => set({ image }),
-  setFragments: (fragments) => set({ fragments }),
+  setEmail: email => set({ email }),
+  setImage: image => set({ image }),
+  setFragments: fragments => set({ fragments }),
   setGeneratedHtml: (generatedHtml: string) => set({ generatedHtml })
 }));

@@ -1,28 +1,32 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { useState, useRef, useEffect, type KeyboardEvent } from "react";
-import { Plus, ZoomIn, ZoomOut, Undo, Scissors, Download } from "lucide-react";
-import JSZip from "jszip";
-import FileSaver from "file-saver";
-import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
+import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
+import { Plus, ZoomIn, ZoomOut, Undo, Scissors, Download } from 'lucide-react';
+import JSZip from 'jszip';
+import FileSaver from 'file-saver';
+import { Button } from '../ui/button';
+import { cn } from '@/lib/utils';
 
 type Line = {
-  id: string
-  position: number // Ahora será un valor normalizado entre 0-1
-  type: "horizontal" | "vertical"
-}
+  id: string;
+  position: number; // Ahora será un valor normalizado entre 0-1
+  type: 'horizontal' | 'vertical';
+};
 
 interface ImageCutterProps {
-  initialImageUrl: string
-  initialImageName: string
-  onFragmentsGenerated: (fragments: string[]) => void
+  initialImageUrl: string;
+  initialImageName: string;
+  onFragmentsGenerated: (fragments: string[]) => void;
 }
 
-export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGenerated }: ImageCutterProps) => {
+export const ImageCutter = ({
+  initialImageUrl,
+  initialImageName,
+  onFragmentsGenerated
+}: ImageCutterProps) => {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [lines, setLines] = useState<Line[]>([]);
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
@@ -30,8 +34,13 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [scale, setScale] = useState(1);
   const [zoom, setZoom] = useState(1);
-  const [selectedFragments, setSelectedFragments] = useState<Set<number>>(new Set());
-  const [lastLinePosition, setLastLinePosition] = useState<{ horizontal: number | null; vertical: number | null }>({
+  const [selectedFragments, setSelectedFragments] = useState<Set<number>>(
+    new Set()
+  );
+  const [lastLinePosition, setLastLinePosition] = useState<{
+    horizontal: number | null;
+    vertical: number | null;
+  }>({
     horizontal: null,
     vertical: null
   });
@@ -47,17 +56,22 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
     if (!initialImageUrl) return;
 
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    img.crossOrigin = 'anonymous';
 
     img.onload = () => {
-      console.log("Image loaded successfully:", img.width, "x", img.height);
+      console.log('Image loaded successfully:', img.width, 'x', img.height);
       setImage(img);
 
       // Calculate scale to fit the image in the container
       if (containerRef.current) {
         const containerWidth = containerRef.current.clientWidth - 32;
         const scale = Math.min(1, containerWidth / img.width);
-        console.log("Scale calculated:", scale, "Container width:", containerWidth);
+        console.log(
+          'Scale calculated:',
+          scale,
+          'Container width:',
+          containerWidth
+        );
         setScale(scale);
         setCanvasSize({
           width: img.width * scale,
@@ -66,15 +80,15 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
       }
     };
 
-    img.onerror = (error) => {
-      console.error("Error loading image:", error);
+    img.onerror = error => {
+      console.error('Error loading image:', error);
     };
 
     img.src = initialImageUrl;
   }, [initialImageUrl]);
 
   // Add a new line
-  const addLine = (type: "horizontal" | "vertical") => {
+  const addLine = (type: 'horizontal' | 'vertical') => {
     if (!image) return;
 
     // Default offset from the last line (normalizado)
@@ -82,29 +96,35 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
 
     let position: number;
 
-    if (type === "horizontal") {
+    if (type === 'horizontal') {
       // Si hay una posición anterior, coloca la nueva línea debajo
       if (lastLinePosition.horizontal !== null) {
         // Calcula la nueva posición basada en la última posición más el offset
-        position = Math.min(Math.max(lastLinePosition.horizontal + offset, 0), 0.95);
+        position = Math.min(
+          Math.max(lastLinePosition.horizontal + offset, 0),
+          0.95
+        );
       } else {
         // Comienza desde arriba (con un pequeño margen)
         position = 0.1; // 10% desde arriba
       }
 
       // Actualiza la última posición horizontal
-      setLastLinePosition((prev) => ({ ...prev, horizontal: position }));
+      setLastLinePosition(prev => ({ ...prev, horizontal: position }));
     } else {
       // Línea vertical
       if (lastLinePosition.vertical !== null) {
-        position = Math.min(Math.max(lastLinePosition.vertical + offset, 0), 0.95);
+        position = Math.min(
+          Math.max(lastLinePosition.vertical + offset, 0),
+          0.95
+        );
       } else {
         // Comienza desde la izquierda (con un pequeño margen)
         position = 0.1; // 10% desde la izquierda
       }
 
       // Actualiza la última posición vertical
-      setLastLinePosition((prev) => ({ ...prev, vertical: position }));
+      setLastLinePosition(prev => ({ ...prev, vertical: position }));
     }
 
     const newLine: Line = {
@@ -120,44 +140,49 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
   // Handle keyboard events for line movement and shortcuts
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // Atajos para añadir líneas
-    if (e.key.toLowerCase() === "h") {
+    if (e.key.toLowerCase() === 'h') {
       e.preventDefault();
-      addLine("horizontal");
+      addLine('horizontal');
       return;
     }
 
-    if (e.key.toLowerCase() === "v") {
+    if (e.key.toLowerCase() === 'v') {
       e.preventDefault();
-      addLine("vertical");
+      addLine('vertical');
       return;
     }
 
     // Movimiento de líneas con teclas de flecha
     if (!selectedLineId) return;
 
-    const line = lines.find((l) => l.id === selectedLineId);
+    const line = lines.find(l => l.id === selectedLineId);
     if (!line) return;
 
     const step = e.shiftKey ? 0.02 : 0.005; // Paso normalizado (2% o 0.5%)
     let newPosition = line.position;
 
-    if (line.type === "horizontal") {
-      if (e.key === "ArrowUp") newPosition = Math.max(0, line.position - step);
-      if (e.key === "ArrowDown") newPosition = Math.min(1, line.position + step);
+    if (line.type === 'horizontal') {
+      if (e.key === 'ArrowUp') newPosition = Math.max(0, line.position - step);
+      if (e.key === 'ArrowDown')
+        newPosition = Math.min(1, line.position + step);
     } else {
-      if (e.key === "ArrowLeft") newPosition = Math.max(0, line.position - step);
-      if (e.key === "ArrowRight") newPosition = Math.min(1, line.position + step);
+      if (e.key === 'ArrowLeft')
+        newPosition = Math.max(0, line.position - step);
+      if (e.key === 'ArrowRight')
+        newPosition = Math.min(1, line.position + step);
     }
 
     if (newPosition !== line.position) {
-      const updatedLines = lines.map((l) => (l.id === selectedLineId ? { ...l, position: newPosition } : l));
+      const updatedLines = lines.map(l =>
+        l.id === selectedLineId ? { ...l, position: newPosition } : l
+      );
       setLines(updatedLines);
 
       // Actualiza la última posición de línea al mover una línea
-      if (line.type === "horizontal") {
-        setLastLinePosition((prev) => ({ ...prev, horizontal: newPosition }));
+      if (line.type === 'horizontal') {
+        setLastLinePosition(prev => ({ ...prev, horizontal: newPosition }));
       } else {
-        setLastLinePosition((prev) => ({ ...prev, vertical: newPosition }));
+        setLastLinePosition(prev => ({ ...prev, vertical: newPosition }));
       }
 
       e.preventDefault();
@@ -176,27 +201,35 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
     if (!isDragging || !selectedLineId || !canvasRef.current || !image) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const line = lines.find((l) => l.id === selectedLineId);
+    const line = lines.find(l => l.id === selectedLineId);
     if (!line) return;
 
     let newPosition: number;
 
-    if (line.type === "horizontal") {
+    if (line.type === 'horizontal') {
       // Convertir la posición del ratón a un valor normalizado (0-1)
-      newPosition = Math.max(0, Math.min((e.clientY - rect.top) / (canvasSize.height * zoom), 1));
+      newPosition = Math.max(
+        0,
+        Math.min((e.clientY - rect.top) / (canvasSize.height * zoom), 1)
+      );
     } else {
       // Convertir la posición del ratón a un valor normalizado (0-1)
-      newPosition = Math.max(0, Math.min((e.clientX - rect.left) / (canvasSize.width * zoom), 1));
+      newPosition = Math.max(
+        0,
+        Math.min((e.clientX - rect.left) / (canvasSize.width * zoom), 1)
+      );
     }
 
-    const updatedLines = lines.map((l) => (l.id === selectedLineId ? { ...l, position: newPosition } : l));
+    const updatedLines = lines.map(l =>
+      l.id === selectedLineId ? { ...l, position: newPosition } : l
+    );
     setLines(updatedLines);
 
     // Actualiza la última posición de línea al arrastrar
-    if (line.type === "horizontal") {
-      setLastLinePosition((prev) => ({ ...prev, horizontal: newPosition }));
+    if (line.type === 'horizontal') {
+      setLastLinePosition(prev => ({ ...prev, horizontal: newPosition }));
     } else {
-      setLastLinePosition((prev) => ({ ...prev, vertical: newPosition }));
+      setLastLinePosition(prev => ({ ...prev, vertical: newPosition }));
     }
   };
 
@@ -207,13 +240,13 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
   // Handle zoom in/out
   const handleZoomIn = () => {
     if (zoom < 3) {
-      setZoom((prevZoom) => Math.min(prevZoom + 0.25, 3));
+      setZoom(prevZoom => Math.min(prevZoom + 0.25, 3));
     }
   };
 
   const handleZoomOut = () => {
     if (zoom > 0.5) {
-      setZoom((prevZoom) => Math.max(prevZoom - 0.25, 0.5));
+      setZoom(prevZoom => Math.max(prevZoom - 0.25, 0.5));
     }
   };
 
@@ -225,10 +258,10 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
   // Draw the image and lines on the canvas
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
+    const ctx = canvas?.getContext('2d');
 
     if (!canvas || !ctx || !image) {
-      console.log("Canvas, context, or image not available");
+      console.log('Canvas, context, or image not available');
       return;
     }
 
@@ -240,7 +273,12 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
     if (canvas.width !== zoomedWidth || canvas.height !== zoomedHeight) {
       canvas.width = zoomedWidth;
       canvas.height = zoomedHeight;
-      console.log("Updated canvas dimensions with zoom:", canvas.width, "x", canvas.height);
+      console.log(
+        'Updated canvas dimensions with zoom:',
+        canvas.width,
+        'x',
+        canvas.height
+      );
     }
 
     // Clear canvas
@@ -249,26 +287,26 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
     // Draw image with zoom
     try {
       ctx.drawImage(image, 0, 0, zoomedWidth, zoomedHeight);
-      console.log("Image drawn on canvas with zoom:", zoom);
+      console.log('Image drawn on canvas with zoom:', zoom);
     } catch (error) {
-      console.error("Error drawing image:", error);
+      console.error('Error drawing image:', error);
     }
 
     // Draw lines with enhanced visibility
-    lines.forEach((line) => {
+    lines.forEach(line => {
       ctx.beginPath();
 
       // Establece el estilo de línea
       ctx.lineWidth = 2;
-      ctx.strokeStyle = line.id === selectedLineId ? "#ff3e00" : "#3b82f6";
+      ctx.strokeStyle = line.id === selectedLineId ? '#ff3e00' : '#3b82f6';
 
       // Añade una sombra sutil para mejor visibilidad
-      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
       ctx.shadowBlur = 4;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
 
-      if (line.type === "horizontal") {
+      if (line.type === 'horizontal') {
         // Convierte la posición normalizada a coordenadas de pantalla
         const yPos = line.position * zoomedHeight;
         // Dibuja la línea horizontal a lo largo de todo el ancho
@@ -285,7 +323,7 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
       ctx.stroke();
 
       // Restablece la sombra para las siguientes operaciones
-      ctx.shadowColor = "transparent";
+      ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
     });
   }, [image, lines, selectedLineId, canvasSize, zoom]);
@@ -300,10 +338,10 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
     };
 
     // Add global mouse up event to handle cases where mouse is released outside the canvas
-    document.addEventListener("mouseup", handleGlobalMouseUp);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
 
     return () => {
-      document.removeEventListener("mouseup", handleGlobalMouseUp);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
   }, []);
 
@@ -313,13 +351,13 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
 
     // Convierte las posiciones normalizadas a coordenadas de la imagen original
     const horizontalLines = lines
-      .filter((line) => line.type === "horizontal")
-      .map((line) => Math.floor(line.position * image.height))
+      .filter(line => line.type === 'horizontal')
+      .map(line => Math.floor(line.position * image.height))
       .sort((a, b) => a - b);
 
     const verticalLines = lines
-      .filter((line) => line.type === "vertical")
-      .map((line) => Math.floor(line.position * image.width))
+      .filter(line => line.type === 'vertical')
+      .map(line => Math.floor(line.position * image.width))
       .sort((a, b) => a - b);
 
     // Añade los límites de la imagen
@@ -327,8 +365,8 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
     const vLines = [0, ...verticalLines, image.width];
 
     // Create temporary canvas for cutting at ORIGINAL resolution
-    const tempCanvas = document.createElement("canvas");
-    const tempCtx = tempCanvas.getContext("2d", { alpha: false });
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d', { alpha: false });
     if (!tempCtx) return;
 
     const newFragments: string[] = [];
@@ -349,7 +387,7 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
         tempCanvas.height = height;
 
         // Clear the canvas with white background to avoid transparency issues
-        tempCtx.fillStyle = "#FFFFFF";
+        tempCtx.fillStyle = '#FFFFFF';
         tempCtx.fillRect(0, 0, width, height);
 
         // Draw the fragment at full resolution
@@ -366,7 +404,7 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
         );
 
         // Get the image data at maximum quality
-        const dataUrl = tempCanvas.toDataURL("image/png", 1.0);
+        const dataUrl = tempCanvas.toDataURL('image/png', 1.0);
         newFragments.push(dataUrl);
       }
     }
@@ -392,7 +430,9 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
     setSelectedFragments(newSelection);
 
     // Update the fragments in the callback
-    const selectedFragmentsArray = Array.from(fragments).filter((_, i) => newSelection.has(i));
+    const selectedFragmentsArray = Array.from(fragments).filter((_, i) =>
+      newSelection.has(i)
+    );
     onFragmentsGenerated(selectedFragmentsArray);
   };
 
@@ -404,27 +444,32 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
 
     try {
       const zip = new JSZip();
-      const folder = zip.folder("image-fragments");
+      const folder = zip.folder('image-fragments');
 
       let exportCount = 0;
 
       fragments.forEach((dataUrl, index) => {
         // Only include selected fragments
         if (selectedFragments.has(index)) {
-          const base64Data = dataUrl.split(",")[1];
-          folder?.file(`fragment-${exportCount + 1}.png`, base64Data, { base64: true });
+          const base64Data = dataUrl.split(',')[1];
+          folder?.file(`fragment-${exportCount + 1}.png`, base64Data, {
+            base64: true
+          });
           exportCount++;
         }
       });
 
       const content = await zip.generateAsync({
-        type: "blob",
-        compression: "STORE" // No compression to maintain quality
+        type: 'blob',
+        compression: 'STORE' // No compression to maintain quality
       });
 
-      FileSaver.saveAs(content, `${initialImageName.split(".")[0]}-fragments.zip`);
+      FileSaver.saveAs(
+        content,
+        `${initialImageName.split('.')[0]}-fragments.zip`
+      );
     } catch (error) {
-      console.error("Error generating zip:", error);
+      console.error('Error generating zip:', error);
     } finally {
       setIsGenerating(false);
     }
@@ -433,19 +478,19 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
   return (
     <div className="grid gap-6">
       <div className="mb-6">
-        <div className="flex gap-2 mb-4">
+        <div className="mb-4 flex gap-2">
           <Button
             variant="secondary"
-            onClick={() => addLine("horizontal")}
-            className="flex items-center gap-2 rounded-full py-2 px-4"
+            onClick={() => addLine('horizontal')}
+            className="flex items-center gap-2 rounded-full px-4 py-2"
           >
             <Plus size={16} />
             Añadir Línea Horizontal
           </Button>
           <Button
             variant="secondary"
-            onClick={() => addLine("vertical")}
-            className="flex items-center gap-2 rounded-full py-2 px-4"
+            onClick={() => addLine('vertical')}
+            className="flex items-center gap-2 rounded-full px-4 py-2"
           >
             <Plus size={16} />
             Añadir Línea Vertical
@@ -453,7 +498,7 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
         </div>
 
         <div
-          className="bg-gray-100 rounded-lg shadow-lg p-4 flex justify-center items-center"
+          className="flex items-center justify-center rounded-lg bg-gray-100 p-4 shadow-lg"
           ref={containerRef}
           tabIndex={0}
           onKeyDown={handleKeyDown}
@@ -461,18 +506,18 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
           <div
             className="relative overflow-auto bg-white"
             style={{
-              maxHeight: "70vh",
-              width: "100%"
+              maxHeight: '70vh',
+              width: '100%'
             }}
             ref={editorRef}
           >
-            <div className="flex justify-center items-center min-h-[200px]">
+            <div className="flex min-h-[200px] items-center justify-center">
               {image && (
                 <canvas
                   ref={canvasRef}
                   width={canvasSize.width * zoom}
                   height={canvasSize.height * zoom}
-                  onClick={(e) => {
+                  onClick={e => {
                     const rect = canvasRef.current?.getBoundingClientRect();
                     if (!rect || !image) return;
 
@@ -487,9 +532,9 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
                     let closestLine: Line | null = null;
                     let minDistance = 0.02; // Umbral para selección (2% de la dimensión)
 
-                    lines.forEach((line) => {
+                    lines.forEach(line => {
                       let distance;
-                      if (line.type === "horizontal") {
+                      if (line.type === 'horizontal') {
                         distance = Math.abs(normalizedY - line.position);
                       } else {
                         distance = Math.abs(normalizedX - line.position);
@@ -501,27 +546,34 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
                       }
                     });
 
-                    setSelectedLineId(closestLine ? (closestLine as Line).id : null);
+                    setSelectedLineId(
+                      closestLine ? (closestLine as Line).id : null
+                    );
                   }}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
                   style={{
-                    cursor: selectedLineId ? (isDragging ? "grabbing" : "grab") : "default"
+                    cursor: selectedLineId
+                      ? isDragging
+                        ? 'grabbing'
+                        : 'grab'
+                      : 'default'
                   }}
                   className="max-w-full"
                 />
               )}
-              {!image && <div className="text-gray-500 py-10 text-center">Cargando imagen...</div>}
+              {!image && (
+                <div className="py-10 text-center text-gray-500">
+                  Cargando imagen...
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="flex justify-between mt-4">
-          <Button
-            onClick={generateFragments}
-            disabled={lines.length === 0}
-          >
+        <div className="mt-4 flex justify-between">
+          <Button onClick={generateFragments} disabled={lines.length === 0}>
             <Scissors size={16} />
             Generar Fragmentos
           </Button>
@@ -531,20 +583,21 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
       <section>
         {fragments.length > 0 && (
           <div className="mt-8 border-t border-t-gray-200 pt-10">
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <div className="mb-6">
                 <h2 className="text-xl font-semibold">Fragments</h2>
                 <p className="text-sm text-gray-600">
-                  {selectedFragments.size} of {fragments.length} fragments selected
+                  {selectedFragments.size} of {fragments.length} fragments
+                  selected
                 </p>
               </div>
               <Button
                 onClick={downloadFragments}
                 disabled={isGenerating || selectedFragments.size === 0}
-                className="flex items-center gap-2 "
+                className="flex items-center gap-2"
               >
                 <Download size={16} />
-                {isGenerating ? "Generating..." : "Download Selected"}
+                {isGenerating ? 'Generating...' : 'Download Selected'}
               </Button>
             </div>
 
@@ -553,27 +606,33 @@ export const ImageCutter = ({ initialImageUrl, initialImageName, onFragmentsGene
                 <div
                   key={index}
                   className={cn(
-                    "flex items-center gap-4 p-3 border rounded-md cursor-pointer transition-colors",
-                    selectedFragments.has(index) ? "bg-gray-50 border-gray-500" : "hover:bg-gray-50"
+                    'flex cursor-pointer items-center gap-4 rounded-md border p-3 transition-colors',
+                    selectedFragments.has(index)
+                      ? 'border-gray-500 bg-gray-50'
+                      : 'hover:bg-gray-50'
                   )}
                   onClick={() => toggleFragmentSelection(index)}
                 >
-                  <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-gray-100">
                     <img
-                      src={fragment || "/placeholder.svg"}
+                      src={fragment || '/placeholder.svg'}
                       alt={`Fragment ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium line-clamp-1">Fragment {index + 1}</p>
-                    <p className="text-sm text-gray-500 line-clamp-1">Fragment {index + 1}</p>
+                    <p className="line-clamp-1 font-medium">
+                      Fragment {index + 1}
+                    </p>
+                    <p className="line-clamp-1 text-sm text-gray-500">
+                      Fragment {index + 1}
+                    </p>
                   </div>
                   <input
                     type="checkbox"
                     checked={selectedFragments.has(index)}
-                    onChange={() => { }}
-                    className="w-5 h-5 pointer-events-none accent-gray-800"
+                    onChange={() => {}}
+                    className="pointer-events-none h-5 w-5 accent-gray-800"
                   />
                 </div>
               ))}
