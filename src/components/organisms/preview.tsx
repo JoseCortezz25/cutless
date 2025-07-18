@@ -86,12 +86,11 @@ export const Preview = ({ onNext }: { onNext: (step: Steps) => void }) => {
         </Button>
       </div>
 
-      {isModalOpen && (
-        <CodePreviewModal
-          code={processedHtml}
-          onClose={() => setIsModalOpen(false)}
-        />
-      )}
+      <CodePreviewModal
+        code={processedHtml}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      />
     </section>
   );
 };
